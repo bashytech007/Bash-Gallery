@@ -39,14 +39,17 @@ export const useUserStore = create<UserState>()((set) => ({
   getAvatar: async (userId: string) => {
     const data = await databases.listDocuments(
       process.env.NEXT_PUBLIC_DATABASE_ID!,
-      process.env.NEXT_PUBLIC_AVATAR_ID!,
-      [Query.equal("user", userId)]
+      process.env.NEXT_PUBLIC_TODOS_COLLECTION_ID!
     );
     if (data.total === 0) return;
     const avatar = data?.documents;
-    const imageDetail = JSON.parse(avatar[0]?.imageUrl);
-    const imageUrl = await getUrl(imageDetail && imageDetail);
-    set({ userAvatar: imageUrl.toString() });
+    if (avatar[0]?.image) {
+      const imageDetail = JSON.parse(avatar[0]?.image);
+      const imageUrl = await getUrl(imageDetail && imageDetail);
+      set({ userAvatar: imageUrl.toString() });
+    } else {
+      set({ userAvatar: "" });
+    }
   },
 
   register: async (
@@ -70,6 +73,7 @@ export const useUserStore = create<UserState>()((set) => ({
       if (file) {
         const data = await databases.createDocument(
           process.env.NEXT_PUBLIC_DATABASE_ID!,
+
           process.env.NEXT_PUBLIC_IMAGE_COLLECTION_ID!,
           ID.unique(),
           {
